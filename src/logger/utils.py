@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import PIL
 from torchvision.transforms import ToTensor
 
-plt.switch_backend("agg")  # fix RuntimeError: main thread is not in main loop
+# plt.switch_backend("agg")  # fix RuntimeError: main thread is not in main loop
 
 
 def plot_images(imgs, config):
@@ -60,7 +60,7 @@ def plot_spectrogram(spectrogram, name=None):
     buf.seek(0)
 
     # convert buffer to Tensor
-    image = ToTensor()(PIL.Image.open(buf))
+    image = ToTensor()(PIL.Image.open(buf)).transpose(0, 1).transpose(1, 2)
 
     plt.close()
 

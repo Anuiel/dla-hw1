@@ -101,8 +101,8 @@ class Trainer(BaseTrainer):
             inds[: int(ind_len)]
             for inds, ind_len in zip(argmax_inds, log_probs_length.numpy())
         ]
-        argmax_texts_raw = [self.text_encoder.decode(inds) for inds in argmax_inds]
-        argmax_texts = [self.text_encoder.ctc_decode(inds) for inds in argmax_inds]
+        argmax_texts = [self.text_encoder.decode(inds) for inds in argmax_inds]
+        argmax_texts_raw = [self.text_encoder.decode_raw(inds) for inds in argmax_inds]
         tuples = list(zip(argmax_texts, text, argmax_texts_raw, audio_path))
 
         rows = {}

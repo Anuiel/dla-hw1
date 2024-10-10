@@ -1,0 +1,9 @@
+_target_: src.model.Conformer
+n_input_features: 128
+n_encoder_features: 128
+n_ffn_hidden: 256
+n_heads: 4
+n_layers: 8
+depthwise_conv_kernel_size: 31
+max_seq_len: 1024
+dropout: 0.1

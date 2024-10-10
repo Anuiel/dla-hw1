@@ -7,10 +7,14 @@ torch_audiomentations
 tqdm
 matplotlib
 pandas
-wandb
+# wandb # R.I.P.
+editdistance
 comet_ml
 hydra-core
 
 black
 isort
 pre-commit
+
+wget
+ipykernel # for jupyter debug

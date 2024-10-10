@@ -1,6 +1,10 @@
 train: [] # metrics that are calculated during training
 inference: # metrics that are calculated during inference (eval)
-  - _target_: src.metrics.ArgmaxCERMetric
+  - _target_: src.metrics.CERMetric
     name: "CER_(Argmax)" # it is better to avoid spaces in names
-  - _target_: src.metrics.ArgmaxWERMetric
+    token_decoder: 
+      _target_: src.text_encoder.CTCArgmaxDecoder
+  - _target_: src.metrics.WERMetric
     name: "WER_(Argmax)"
+    token_decoder: 
+      _target_: src.text_encoder.CTCArgmaxDecoder

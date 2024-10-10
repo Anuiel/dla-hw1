@@ -1,17 +1,22 @@
 defaults:
-  - model: baseline
+  - model: conformer
   - writer: cometml
   - metrics: example
   - datasets: librispeech
   - dataloader: example
   - transforms: example_only_instance
   - _self_
+writer:
+  run_name: "conformer"
 optimizer:
   _target_: torch.optim.AdamW
   lr: 2e-4
+  betas: [0.9, 0.98]
+  eps: 1e-9
+  weight_decay: 1e-6
 lr_scheduler:
   _target_: torch.optim.lr_scheduler.OneCycleLR
-  max_lr: 1e-2
+  max_lr: 0.005
   pct_start: 0.1
   steps_per_epoch: ${trainer.epoch_len}
   epochs: ${trainer.n_epochs}
@@ -23,10 +28,10 @@ text_encoder:
 trainer:
   log_step: 50
   n_epochs: 50
-  epoch_len: 200
+  epoch_len: 250
   device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
   resume_from: null # null or path to the checkpoint dir with *.pth and config.yaml
-  device: auto # device name or "auto"
+  device: "cuda" # device name or "auto"
   override: True # if True, will override the previous run with the same name
   monitor: "min val_WER_(Argmax)" # "off" or "max/min metric_name", i.e. our goal is to maximize/minimize metric
   save_period: 5 # checkpoint each save_period epochs in addition to the best epoch

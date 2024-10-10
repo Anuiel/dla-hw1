@@ -1,4 +1,5 @@
 import json
+import typing as tp
 import os
 import shutil
 from pathlib import Path
@@ -10,6 +11,7 @@ from tqdm import tqdm
 from src.datasets.base_dataset import BaseDataset
 from src.utils.io_utils import ROOT_PATH
 
+
 URL_LINKS = {
     "dev-clean": "https://www.openslr.org/resources/12/dev-clean.tar.gz",
     "dev-other": "https://www.openslr.org/resources/12/dev-other.tar.gz",
@@ -20,9 +22,25 @@ URL_LINKS = {
     "train-other-500": "https://www.openslr.org/resources/12/train-other-500.tar.gz",
 }
 
+type LibrispeechPart = tp.Literal[
+    "dev-clean",
+    "dev-other",
+    "test-clean",
+    "test-other",
+    "train-clean-100",
+    "train-clean-360",
+    "train-other-500",
+    "train-all",
+]
 
 class LibrispeechDataset(BaseDataset):
-    def __init__(self, part, data_dir=None, *args, **kwargs):
+    def __init__(
+        self,
+        part: LibrispeechPart,
+        data_dir: Path | None = None,
+        *args,
+        **kwargs
+    ):
         assert part in URL_LINKS or part == "train_all"
 
         if data_dir is None:
@@ -43,7 +61,7 @@ class LibrispeechDataset(BaseDataset):
 
         super().__init__(index, *args, **kwargs)
 
-    def _load_part(self, part):
+    def _load_part(self, part: LibrispeechPart):
         arch_path = self._data_dir / f"{part}.tar.gz"
         print(f"Loading part {part}")
         wget.download(URL_LINKS[part], str(arch_path))
@@ -53,7 +71,7 @@ class LibrispeechDataset(BaseDataset):
         os.remove(str(arch_path))
         shutil.rmtree(str(self._data_dir / "LibriSpeech"))
 
-    def _get_or_load_index(self, part):
+    def _get_or_load_index(self, part: LibrispeechPart):
         index_path = self._data_dir / f"{part}_index.json"
         if index_path.exists():
             with index_path.open() as f:
@@ -64,7 +82,7 @@ class LibrispeechDataset(BaseDataset):
                 json.dump(index, f, indent=2)
         return index
 
-    def _create_index(self, part):
+    def _create_index(self, part: LibrispeechPart):
         index = []
         split_dir = self._data_dir / part
         if not split_dir.exists():

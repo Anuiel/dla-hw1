@@ -1,5 +1,6 @@
 import logging
 import random
+import typing as tp
 
 import numpy as np
 import torch
@@ -22,15 +23,15 @@ class BaseDataset(Dataset):
 
     def __init__(
         self,
-        index,
-        text_encoder=None,
-        target_sr=16000,
-        limit=None,
-        max_audio_length=None,
-        max_text_length=None,
-        shuffle_index=False,
-        instance_transforms=None,
-    ):
+        index: list[dict],
+        text_encoder: CTCTextEncoder = None,
+        target_sr: int = 16000,
+        limit: int | None = None,
+        max_audio_length: int | None = None,
+        max_text_length: int | None = None,
+        shuffle_index: bool = False,
+        instance_transforms: dict[tp.Callable] | None = None,
+    ) -> None:
         """
         Args:
             index (list[dict]): list, containing dict for each element of
@@ -63,7 +64,7 @@ class BaseDataset(Dataset):
         self.target_sr = target_sr
         self.instance_transforms = instance_transforms
 
-    def __getitem__(self, ind):
+    def __getitem__(self, ind: int):
         """
         Get element from the index, preprocess it, and combine it
         into a dict.
