@@ -1,7 +1,7 @@
 defaults:
-  - model: baseline
-  - metrics: example
-  - datasets: example_eval # we do not want to run inference on training data
+  - model: conformer
+  - metrics: inference
+  - datasets: librispeech-inference
   - dataloader: example
   - transforms: example_only_instance
   - _self_
@@ -10,6 +10,8 @@ text_encoder:
 inferencer:
   device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
   device: auto # device name or "auto"
-  save_path: "example" # any name here, can be a dataset name
+  save_path: "inference-testing" # any name here, can be a dataset name
   seed: 1
-  from_pretrained: "saved/testing/model_best.pth" # path to the pretrained model
+  from_pretrained: "saved/conformer-x5-train/model_best.pth" # path to the pretrained model
+  text_decoder: # for final decoding algorithm
+    _target_: src.text_encoder.CTCArgmaxDecoder

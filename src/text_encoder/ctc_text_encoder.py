@@ -1,6 +1,5 @@
 import re
 import typing as tp
-import itertools
 from enum import Enum
 from string import ascii_lowercase
 
@@ -58,7 +57,7 @@ class CTCTextEncoder:
         Returns:
             text (str): raw text with empty tokens and repetitions.
         """
-        return "".join(self.ind2char[int(x)] for x, _ in itertools.groupby(inds) if x != self.EMPTY_IND).strip()
+        return "".join(self.ind2char[int(x)] for x in inds if x != self.EMPTY_IND).strip()
 
     def decode_raw(self, inds: list[int]) -> str:
         """

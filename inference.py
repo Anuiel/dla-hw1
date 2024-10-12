@@ -31,6 +31,7 @@ def main(config):
 
     # setup text_encoder
     text_encoder = instantiate(config.text_encoder)
+    text_decoder = instantiate(config.inferencer.text_decoder)
 
     # setup data_loader instances
     # batch_transforms should be put on device
@@ -49,8 +50,11 @@ def main(config):
         )
 
     # save_path for model predictions
-    save_path = ROOT_PATH / "data" / "saved" / config.inferencer.save_path
-    save_path.mkdir(exist_ok=True, parents=True)
+    if config.inferencer.save_path is not None:
+        save_path = ROOT_PATH / "data" / "saved" / config.inferencer.save_path
+        save_path.mkdir(exist_ok=True, parents=True)
+    else:
+        save_path = None
 
     inferencer = Inferencer(
         model=model,
@@ -58,6 +62,7 @@ def main(config):
         device=device,
         dataloaders=dataloaders,
         text_encoder=text_encoder,
+        text_decoder=text_decoder,
         batch_transforms=batch_transforms,
         save_path=save_path,
         metrics=metrics,

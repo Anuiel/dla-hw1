@@ -1,6 +1,6 @@
 train:
   get_spectrogram: # special key for getting spectrogram
-    _target_: torchaudio.transforms.MelSpectrogram
+    _target_: src.transforms.LogMelSpectrogram
     sample_rate: 16000
     n_fft: 512
     win_length: 512
@@ -12,7 +12,7 @@ train:
       - _target_: src.transforms.wav_augs.Gain
 inference:
   get_spectrogram:
-    _target_: torchaudio.transforms.MelSpectrogram
+    _target_: src.transforms.LogMelSpectrogram
     sample_rate: 16000
     n_fft: 512
     win_length: 512

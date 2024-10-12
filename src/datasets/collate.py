@@ -1,3 +1,5 @@
+import math
+
 import torch
 
 
@@ -35,7 +37,10 @@ def collate_fn(dataset_items: list[dict]):
     """
 
     spectrogram_length = torch.tensor([item["spectrogram"].shape[-1] for item in dataset_items])
-    spectrogram = pad_sequence([item["spectrogram"] for item in dataset_items], padding_item=0.)
+    # 1e-6 because this is "default" value for 0 in old spectrogram
+    # now i use log(spectrogram + 1e-6)
+    # TODO: somehow tell this thing that eps = 1e-6
+    spectrogram = pad_sequence([item["spectrogram"] for item in dataset_items], padding_item=math.log(1e-6))
 
     text_encoded_length = torch.tensor([item["text_encoded"].shape[-1] for item in dataset_items])
     # TODO: somehow tell this thing that padding token is EMPTY_IND

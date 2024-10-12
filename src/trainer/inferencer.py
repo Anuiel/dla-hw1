@@ -21,6 +21,7 @@ class Inferencer(BaseTrainer):
         device,
         dataloaders,
         text_encoder,
+        text_decoder,
         save_path,
         metrics=None,
         batch_transforms=None,
@@ -36,6 +37,7 @@ class Inferencer(BaseTrainer):
             dataloaders (dict[DataLoader]): dataloaders for different
                 sets of data.
             text_encoder (CTCTextEncoder): text encoder.
+            text_decoder (CTCBaseDecoder): text decoder.
             save_path (str): path to save model predictions and other
                 information.
             metrics (dict): dict with the definition of metrics for
@@ -62,6 +64,7 @@ class Inferencer(BaseTrainer):
         self.batch_transforms = batch_transforms
 
         self.text_encoder = text_encoder
+        self.text_decoder = text_decoder
 
         # define dataloaders
         self.evaluation_dataloaders = {k: v for k, v in dataloaders.items()}
@@ -136,28 +139,26 @@ class Inferencer(BaseTrainer):
         # Some saving logic. This is an example
         # Use if you need to save predictions on disk
 
-        batch_size = batch["logits"].shape[0]
+        batch_size = batch["spectrogram_length"].shape[0]
         current_id = batch_idx * batch_size
 
+        predictions_ids = self.decode_batch(batch)
         for i in range(batch_size):
-            # clone because of
-            # https://github.com/pytorch/pytorch/issues/1995
-            logits = batch["logits"][i].clone()
-            label = batch["labels"][i].clone()
-            pred_label = logits.argmax(dim=-1)
-
+            predictions_text = self.text_encoder.decode(predictions_ids[i])
             output_id = current_id + i
 
-            output = {
-                "pred_label": pred_label,
-                "label": label,
-            }
-
             if self.save_path is not None:
+                output_path = str(self.save_path / part / f"output_{output_id}.txt")
+                with open(output_path, "w") as output_file:
+                    output_file.write(predictions_text)
                 # you can use safetensors or other lib here
-                torch.save(output, self.save_path / part / f"output_{output_id}.pth")
+                # torch.save(output, self.save_path / part / f"output_{output_id}.txt")
 
         return batch
+    
+    def decode_batch(self, batch):
+        decoded_ids = self.text_decoder.decode(batch["log_probs"])
+        return decoded_ids
 
     def _inference_part(self, part, dataloader):
         """
