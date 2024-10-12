@@ -1,5 +1,5 @@
-import math
 import itertools
+import math
 from abc import ABC, abstractmethod
 from collections import defaultdict
 from string import ascii_lowercase

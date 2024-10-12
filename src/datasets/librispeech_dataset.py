@@ -1,7 +1,7 @@
 import json
-import typing as tp
 import os
 import shutil
+import typing as tp
 from pathlib import Path
 
 import torchaudio
@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 from src.datasets.base_dataset import BaseDataset
 from src.utils.io_utils import ROOT_PATH
-
 
 URL_LINKS = {
     "dev-clean": "https://www.openslr.org/resources/12/dev-clean.tar.gz",

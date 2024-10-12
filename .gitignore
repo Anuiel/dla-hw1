@@ -102,6 +102,8 @@ ENV/
 
 # input data, saved log, checkpoints, hydra outputs
 data/
+# fix for me, because data folder is symlink to other dick space
+data 
 input/
 saved/
 wandb/

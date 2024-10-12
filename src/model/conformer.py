@@ -1,6 +1,5 @@
 import torch
-from torch import nn
-from torch import Tensor
+from torch import Tensor, nn
 
 from src.model.rope import MultiHeadSelfAttention, precompute_freqs_cis
 
