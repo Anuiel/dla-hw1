@@ -39,7 +39,8 @@ class RelPositionalEncoding(nn.Module):
         pe_negative = torch.zeros(x.size(1), self.d_model)
         position = torch.arange(0, x.size(1), dtype=torch.float32).unsqueeze(1)
         div_term = torch.exp(
-            torch.arange(0, self.d_model, 2, dtype=torch.float32) * -(math.log(10000.0) / self.d_model)
+            torch.arange(0, self.d_model, 2, dtype=torch.float32)
+            * -(math.log(10000.0) / self.d_model)
         )
         pe_positive[:, 0::2] = torch.sin(position * div_term)
         pe_positive[:, 1::2] = torch.cos(position * div_term)
@@ -125,12 +126,26 @@ class RelativeMultiHeadAttention(nn.Module):
         batch_size = value.size(0)
 
         query = self.query_proj(query).view(batch_size, -1, self.num_heads, self.d_head)
-        key = self.key_proj(key).view(batch_size, -1, self.num_heads, self.d_head).permute(0, 2, 1, 3)
-        value = self.value_proj(value).view(batch_size, -1, self.num_heads, self.d_head).permute(0, 2, 1, 3)
-        pos_embedding = self.pos_proj(pos_embedding).view(batch_size, -1, self.num_heads, self.d_head)
+        key = (
+            self.key_proj(key)
+            .view(batch_size, -1, self.num_heads, self.d_head)
+            .permute(0, 2, 1, 3)
+        )
+        value = (
+            self.value_proj(value)
+            .view(batch_size, -1, self.num_heads, self.d_head)
+            .permute(0, 2, 1, 3)
+        )
+        pos_embedding = self.pos_proj(pos_embedding).view(
+            batch_size, -1, self.num_heads, self.d_head
+        )
 
-        content_score = torch.matmul((query + self.u_bias).transpose(1, 2), key.transpose(2, 3))
-        pos_score = torch.matmul((query + self.v_bias).transpose(1, 2), pos_embedding.permute(0, 2, 3, 1))
+        content_score = torch.matmul(
+            (query + self.u_bias).transpose(1, 2), key.transpose(2, 3)
+        )
+        pos_score = torch.matmul(
+            (query + self.v_bias).transpose(1, 2), pos_embedding.permute(0, 2, 3, 1)
+        )
         pos_score = self._relative_shift(pos_score)
 
         score = (content_score + pos_score) / self.sqrt_dim
@@ -148,8 +163,14 @@ class RelativeMultiHeadAttention(nn.Module):
 
     def _transform_mask(self, mask: torch.Tensor) -> torch.Tensor:
         batch_size, seq_len = mask.shape
-        mask_expanded = mask.view(batch_size, 1, 1, seq_len).expand(-1, self.num_heads, -1, -1)
-        mask_expanded = mask_expanded.float().masked_fill(mask_expanded == 0, float('-inf')).masked_fill(mask_expanded == 1, float(0.0))
+        mask_expanded = mask.view(batch_size, 1, 1, seq_len).expand(
+            -1, self.num_heads, -1, -1
+        )
+        mask_expanded = (
+            mask_expanded.float()
+            .masked_fill(mask_expanded == 0, float("-inf"))
+            .masked_fill(mask_expanded == 1, float(0.0))
+        )
         return mask_expanded
 
     def _relative_shift(self, pos_score: Tensor) -> Tensor:
@@ -157,8 +178,12 @@ class RelativeMultiHeadAttention(nn.Module):
         zeros = pos_score.new_zeros(batch_size, num_heads, seq_length1, 1)
         padded_pos_score = torch.cat([zeros, pos_score], dim=-1)
 
-        padded_pos_score = padded_pos_score.view(batch_size, num_heads, seq_length2 + 1, seq_length1)
-        pos_score = padded_pos_score[:, :, 1:].view_as(pos_score)[:, :, :, : seq_length2 // 2 + 1]
+        padded_pos_score = padded_pos_score.view(
+            batch_size, num_heads, seq_length2 + 1, seq_length1
+        )
+        pos_score = padded_pos_score[:, :, 1:].view_as(pos_score)[
+            :, :, :, : seq_length2 // 2 + 1
+        ]
 
         return pos_score
 
@@ -212,6 +237,8 @@ class ConformerMultiHeadedSelfAttentionModule(nn.Module):
         pos_embedding = pos_embedding.repeat(batch_size, 1, 1)
 
         inputs = self.layer_norm(inputs)
-        outputs = self.attention(inputs, inputs, inputs, pos_embedding=pos_embedding, mask=mask)
+        outputs = self.attention(
+            inputs, inputs, inputs, pos_embedding=pos_embedding, mask=mask
+        )
 
         return self.dropout(outputs)

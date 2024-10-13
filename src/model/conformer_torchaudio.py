@@ -17,7 +17,7 @@ class ConformerTorchAudio(Conformer):
         n_tokens: int,
         dropout: float,
         use_group_norm: bool = False,
-        convolution_first: bool = False
+        convolution_first: bool = False,
     ):
         super().__init__(
             input_dim=n_encoder_features,
@@ -27,16 +27,18 @@ class ConformerTorchAudio(Conformer):
             depthwise_conv_kernel_size=depthwise_conv_kernel_size,
             dropout=dropout,
             use_group_norm=use_group_norm,
-            convolution_first=convolution_first
+            convolution_first=convolution_first,
         )
         self.subsampling = SubsamplingBlock(n_encoder_features)
         self.input_projector = nn.Linear(
             in_features=n_encoder_features * n_input_features // 4,
-            out_features=n_encoder_features
+            out_features=n_encoder_features,
         )
         self.output_projector = nn.Linear(n_encoder_features, n_tokens)
-    
-    def forward(self, spectrogram: torch.Tensor, spectrogram_length: torch.Tensor, **batch) -> dict:
+
+    def forward(
+        self, spectrogram: torch.Tensor, spectrogram_length: torch.Tensor, **batch
+    ) -> dict:
         """
         Args:
             spectrogram: spectrogram spectrogram with shape [batch_size, n_features, seq_len]
@@ -46,7 +48,9 @@ class ConformerTorchAudio(Conformer):
                 transformed lengths.
         """
         spectrogram = spectrogram.transpose(1, 2)
-        spectrogram, spectrogram_length = self.subsampling(spectrogram, spectrogram_length)
+        spectrogram, spectrogram_length = self.subsampling(
+            spectrogram, spectrogram_length
+        )
         spectrogram = self.input_projector(spectrogram)
 
         output, spectrogram_length = super().forward(spectrogram, spectrogram_length)

@@ -4,8 +4,8 @@ import typing as tp
 from enum import Enum
 from string import ascii_lowercase
 
-import torch
 import sentencepiece as spm
+import torch
 
 from src.utils.io_utils import ROOT_PATH
 
@@ -24,12 +24,16 @@ class BPETextEncoder:
         full_path = ROOT_PATH / path
         if full_path.is_file():
             print("Importing pretained tokenizer")
-            self.tokenizer = spm.SentencePieceProcessor(model_file=str(ROOT_PATH / path))
+            self.tokenizer = spm.SentencePieceProcessor(
+                model_file=str(ROOT_PATH / path)
+            )
         else:
             print("Training new tokenizer")
 
             self.train(save_path=path, dataset=train_dataset, vocab_size=vocab_size)
-            self.tokenizer = spm.SentencePieceProcessor(model_file=str(ROOT_PATH / path))
+            self.tokenizer = spm.SentencePieceProcessor(
+                model_file=str(ROOT_PATH / path)
+            )
 
     def __len__(self) -> int:
         return self.tokenizer.vocab_size()
@@ -41,7 +45,7 @@ class BPETextEncoder:
     def encode(self, text: str) -> torch.Tensor:
         text = self.normalize_text(text)
         return torch.tensor(self.tokenizer.encode(text)).unsqueeze(0)
-        
+
     def decode(self, inds: list[int]) -> str:
         """
         Args:
@@ -49,7 +53,9 @@ class BPETextEncoder:
         Returns:
             text (str): decoded text.
         """
-        return self.tokenizer.decode([int(x) for x in inds if int(x) != self.UNK_ID]).strip()
+        return self.tokenizer.decode(
+            [int(x) for x in inds if int(x) != self.UNK_ID]
+        ).strip()
 
     @staticmethod
     def normalize_text(text: str):
@@ -60,16 +66,18 @@ class BPETextEncoder:
     @classmethod
     def dataset_iterator(cls, dataset):
         for x in dataset:
-            yield cls.normalize_text(x['text'])
+            yield cls.normalize_text(x["text"])
 
     @classmethod
-    def train(cls, save_path: str, dataset, vocab_size: int): # should be typing there, but circular input
+    def train(
+        cls, save_path: str, dataset, vocab_size: int
+    ):  # should be typing there, but circular input
         model = io.BytesIO()
 
         spm.SentencePieceTrainer.train(
             sentence_iterator=cls.dataset_iterator(dataset),
             model_writer=model,
-            model_type='bpe',
+            model_type="bpe",
             vocab_size=vocab_size,
             pad_id=cls.PAD_ID,
             unk_id=cls.UNK_ID,
@@ -77,8 +85,8 @@ class BPETextEncoder:
             treat_whitespace_as_suffix=True,
             # not needed in this task
             bos_id=-1,
-            eos_id=-1
+            eos_id=-1,
         )
 
-        with open(str(ROOT_PATH / save_path), 'wb') as f:
+        with open(str(ROOT_PATH / save_path), "wb") as f:
             f.write(model.getvalue())

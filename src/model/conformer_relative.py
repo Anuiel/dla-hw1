@@ -1,8 +1,10 @@
 import torch
 from torch import Tensor, nn
 
-from src.model.relative_attention import ConformerMultiHeadedSelfAttentionModule as AttentionBlock
-from src.model.conformer import FeedForwardBlock, ConvolutionBlock, SubsamplingBlock
+from src.model.conformer import ConvolutionBlock, FeedForwardBlock, SubsamplingBlock
+from src.model.relative_attention import (
+    ConformerMultiHeadedSelfAttentionModule as AttentionBlock,
+)
 
 
 class ConformerRelativeBlock(nn.Module):
@@ -13,27 +15,31 @@ class ConformerRelativeBlock(nn.Module):
         n_features: frequencies in spectrogram recorded
         n_hidden: n_features in intermediate representation for FeedForward block
         n_heads: number of attention heads in MultiHeadSelfAttention block
-        depthwise_conv_kernel_size: kernel size of depthwise convolution in Convolution block 
+        depthwise_conv_kernel_size: kernel size of depthwise convolution in Convolution block
         dropout: dropout probability
     """
+
     def __init__(
         self,
         n_features: int,
         n_hidden: int,
         n_heads: int,
         depthwise_conv_kernel_size: int,
-        dropout: float = 0.0
+        dropout: float = 0.0,
     ) -> None:
         super().__init__()
-        
+
         self.ffn1 = FeedForwardBlock(n_features, n_hidden, dropout)
         self.attention = AttentionBlock(n_features, n_heads, dropout)
-        self.conv = ConvolutionBlock(n_features, n_features, depthwise_conv_kernel_size, dropout)
+        self.conv = ConvolutionBlock(
+            n_features, n_features, depthwise_conv_kernel_size, dropout
+        )
         self.ffn2 = FeedForwardBlock(n_features, n_hidden, dropout)
         self.layer_norm = nn.LayerNorm(n_features)
 
-
-    def forward(self, spectrogram: Tensor, padding_mask: Tensor | None = None) -> Tensor:
+    def forward(
+        self, spectrogram: Tensor, padding_mask: Tensor | None = None
+    ) -> Tensor:
         """
         Args:
             spectrogram: tensor [batch_size, n_features, seq_len]
@@ -65,6 +71,7 @@ class ConformerRelative(nn.Module):
         theta: base for rotary embeddings in MultiHeadSelfAttention block
         dropout: dropout probability
     """
+
     def __init__(
         self,
         n_input_features: int,
@@ -74,13 +81,13 @@ class ConformerRelative(nn.Module):
         n_layers: int,
         depthwise_conv_kernel_size: int,
         n_tokens: int,
-        dropout: float = 0.0
+        dropout: float = 0.0,
     ) -> None:
         super().__init__()
         self.subsampling = SubsamplingBlock(n_encoder_features)
         self.projector = nn.Linear(
             in_features=n_encoder_features * n_input_features // 4,
-            out_features=n_encoder_features
+            out_features=n_encoder_features,
         )
         self.layers = nn.ModuleList(
             [
@@ -89,7 +96,7 @@ class ConformerRelative(nn.Module):
                     n_ffn_hidden,
                     n_heads,
                     depthwise_conv_kernel_size,
-                    dropout
+                    dropout,
                 )
                 for _ in range(n_layers)
             ]
@@ -99,14 +106,14 @@ class ConformerRelative(nn.Module):
             in_features=n_encoder_features,
             out_features=n_tokens,
         )
-    
+
     @staticmethod
     def _lengths_to_padding_mask(lengths: Tensor) -> Tensor:
         batch_size = lengths.shape[0]
         max_length = int(torch.max(lengths).item())
-        padding_mask = torch.arange(max_length, device=lengths.device, dtype=lengths.dtype).expand(
-            batch_size, max_length
-        ) < lengths.unsqueeze(1)
+        padding_mask = torch.arange(
+            max_length, device=lengths.device, dtype=lengths.dtype
+        ).expand(batch_size, max_length) < lengths.unsqueeze(1)
         return padding_mask
 
     def forward(self, spectrogram: Tensor, spectrogram_length: Tensor, **batch) -> dict:
@@ -120,15 +127,18 @@ class ConformerRelative(nn.Module):
         """
         spectrogram = spectrogram.transpose(1, 2)
 
-        spectrogram, spectrogram_length = self.subsampling(spectrogram, spectrogram_length)
+        spectrogram, spectrogram_length = self.subsampling(
+            spectrogram, spectrogram_length
+        )
         spectrogram = self.projector(spectrogram)
 
-        seq_len = spectrogram.shape[1]
-        padding_mask = self._lengths_to_padding_mask(spectrogram_length).to(device=spectrogram.device)
+        padding_mask = self._lengths_to_padding_mask(spectrogram_length).to(
+            device=spectrogram.device
+        )
 
         for layer in self.layers:
             spectrogram = layer(spectrogram, padding_mask)
-        
+
         # [batch_size, seq_len, n_tokens]
         logits = self.logits(spectrogram)
         log_probs = nn.functional.log_softmax(logits, dim=-1)

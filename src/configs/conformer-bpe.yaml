@@ -27,7 +27,7 @@ text_encoder:
   _target_: src.text_encoder.BPETextEncoder
   path: "data/tokenizer/train-clean_256.model"
   vocab_size: 256
-  train_dataset: 
+  train_dataset:
   # we need just text
     _target_: src.datasets.LibrispeechDataset
     part: "train-clean"

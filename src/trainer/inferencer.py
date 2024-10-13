@@ -155,7 +155,7 @@ class Inferencer(BaseTrainer):
                 # torch.save(output, self.save_path / part / f"output_{output_id}.txt")
 
         return batch
-    
+
     def decode_batch(self, batch):
         decoded_ids = self.text_decoder.decode(batch["log_probs"])
         return decoded_ids

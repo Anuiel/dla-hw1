@@ -30,16 +30,13 @@ LibrispeechPart = tp.Literal[
     "train-clean-360",
     "train-other-500",
     "train-all",
-    "train-clean"
+    "train-clean",
 ]
+
 
 class LibrispeechDataset(BaseDataset):
     def __init__(
-        self,
-        part: LibrispeechPart,
-        data_dir: Path | None = None,
-        *args,
-        **kwargs
+        self, part: LibrispeechPart, data_dir: Path | None = None, *args, **kwargs
     ):
         assert part in URL_LINKS or part == "train-all" or part == "train-clean"
 

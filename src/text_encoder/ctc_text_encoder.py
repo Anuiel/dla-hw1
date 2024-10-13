@@ -11,7 +11,6 @@ import torch
 # to calculate stuff more efficiently and prettier
 
 
-
 class CTCTextEncoder:
     EMPTY_TOK = ""
 
@@ -48,7 +47,7 @@ class CTCTextEncoder:
             raise Exception(
                 f"Can't encode text '{text}'. Unknown chars: '{' '.join(unknown_chars)}'"
             )
-        
+
     def decode(self, inds: list[int]) -> str:
         """
         Args:
@@ -56,7 +55,9 @@ class CTCTextEncoder:
         Returns:
             text (str): decoded text.
         """
-        return "".join(self.ind2char[int(x)] for x in inds if x != self.EMPTY_IND).strip()
+        return "".join(
+            self.ind2char[int(x)] for x in inds if x != self.EMPTY_IND
+        ).strip()
 
     def decode_raw(self, inds: list[int]) -> str:
         """

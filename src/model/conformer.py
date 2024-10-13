@@ -9,11 +9,12 @@ class FeedForwardBlock(nn.Module):
     Feed forward part of Conformer layer
 
     Args:
-        n_features: frequencies in spectrogram recorded 
+        n_features: frequencies in spectrogram recorded
         n_hidden: n_features in intermediate representation
         dropout: dropout probability
-    
+
     """
+
     def __init__(self, n_features: int, n_hidden: int, dropout: float = 0.0) -> None:
         super().__init__()
         self.ffn = nn.Sequential(
@@ -22,7 +23,7 @@ class FeedForwardBlock(nn.Module):
             nn.SiLU(),
             nn.Dropout(dropout),
             nn.Linear(n_hidden, n_features, bias=True),
-            nn.Dropout(dropout)
+            nn.Dropout(dropout),
         )
 
     def forward(self, spectrogram: Tensor) -> Tensor:
@@ -44,17 +45,18 @@ class MultiHeadSelfAttentonBlock(nn.Module):
         n_heads: number of attention heads
         dropout: dropout probability
     """
+
     def __init__(self, n_features: int, n_heads: int, dropout: float = 0.0):
         super().__init__()
         self.layer_norm = nn.LayerNorm(n_features)
         self.self_attention = MultiHeadSelfAttention(
-            n_features=n_features,
-            n_heads=n_heads,
-            dropout=dropout
+            n_features=n_features, n_heads=n_heads, dropout=dropout
         )
         self.dropout = nn.Dropout(dropout)
-    
-    def forward(self, spectrogram: Tensor, freq: Tensor, padding_mask: Tensor | None = None) -> Tensor:
+
+    def forward(
+        self, spectrogram: Tensor, freq: Tensor, padding_mask: Tensor | None = None
+    ) -> Tensor:
         """
         Args:
             spectrogram: tensor with shape [batch_size, seq_len, n_features]
@@ -78,17 +80,24 @@ class ConvolutionBlock(nn.Module):
         depthwise_kernel_size: kernel size of depthwise convolution layer
         dropout: dropout probability
     """
-    def __init__(self, n_features: int, n_channels: int, depthwise_kernel_size: int, dropout: float = 0.0) -> None:
+
+    def __init__(
+        self,
+        n_features: int,
+        n_channels: int,
+        depthwise_kernel_size: int,
+        dropout: float = 0.0,
+    ) -> None:
         super().__init__()
         self.layer_norm = nn.LayerNorm(n_features)
         self.conv = nn.Sequential(
             # Pointwise conv
             nn.Conv1d(
-                in_channels=n_features, 
+                in_channels=n_features,
                 out_channels=2 * n_channels,
                 kernel_size=1,
                 stride=1,
-                padding=0
+                padding=0,
             ),
             nn.GLU(dim=1),
             # Depthwise conv
@@ -98,7 +107,7 @@ class ConvolutionBlock(nn.Module):
                 kernel_size=depthwise_kernel_size,
                 stride=1,
                 padding=(depthwise_kernel_size - 1) // 2,
-                groups=n_channels
+                groups=n_channels,
             ),
             nn.BatchNorm1d(n_channels),
             nn.SiLU(),
@@ -108,9 +117,9 @@ class ConvolutionBlock(nn.Module):
                 out_channels=n_features,
                 kernel_size=1,
                 stride=1,
-                padding=0
+                padding=0,
             ),
-            nn.Dropout(dropout)
+            nn.Dropout(dropout),
         )
 
     def forward(self, spectrogram: Tensor) -> Tensor:
@@ -135,26 +144,34 @@ class ConformerBlock(nn.Module):
         n_features: frequencies in spectrogram recorded
         n_hidden: n_features in intermediate representation for FeedForward block
         n_heads: number of attention heads in MultiHeadSelfAttention block
-        depthwise_conv_kernel_size: kernel size of depthwise convolution in Convolution block 
+        depthwise_conv_kernel_size: kernel size of depthwise convolution in Convolution block
         dropout: dropout probability
     """
+
     def __init__(
         self,
         n_features: int,
         n_hidden: int,
         n_heads: int,
         depthwise_conv_kernel_size: int,
-        dropout: float = 0.0
+        dropout: float = 0.0,
     ) -> None:
         super().__init__()
         self.ffn1 = FeedForwardBlock(n_features, n_hidden, dropout)
         self.attention = MultiHeadSelfAttentonBlock(n_features, n_heads, dropout)
-        self.conv = ConvolutionBlock(n_features, n_features, depthwise_conv_kernel_size, dropout)
+        self.conv = ConvolutionBlock(
+            n_features, n_features, depthwise_conv_kernel_size, dropout
+        )
         self.ffn2 = FeedForwardBlock(n_features, n_hidden, dropout)
         self.layer_norm = nn.LayerNorm(n_features)
 
-
-    def forward(self, spectrogram: Tensor, freq: Tensor, padding_mask: Tensor | None = None, **batch) -> Tensor:
+    def forward(
+        self,
+        spectrogram: Tensor,
+        freq: Tensor,
+        padding_mask: Tensor | None = None,
+        **batch,
+    ) -> Tensor:
         """
         Args:
             spectrogram: tensor [batch_size, n_features, seq_len]
@@ -162,7 +179,9 @@ class ConformerBlock(nn.Module):
             padding_mask: padding mask for MultiHeadSelfAttention block
         """
         spectrogram = spectrogram * 0.5 + self.ffn1(spectrogram)
-        spectrogram = spectrogram * 1.0 + self.attention(spectrogram, freq, padding_mask)
+        spectrogram = spectrogram * 1.0 + self.attention(
+            spectrogram, freq, padding_mask
+        )
         spectrogram = spectrogram * 1.0 + self.conv(spectrogram)
         spectrogram = spectrogram * 0.5 + self.ffn2(spectrogram)
         spectrogram = self.layer_norm(spectrogram)
@@ -176,6 +195,7 @@ class SubsamplingBlock(nn.Module):
     Args:
         out_channels: output channels count
     """
+
     def __init__(self, out_channels: int) -> None:
         super().__init__()
         self.subsampling = nn.Sequential(
@@ -184,7 +204,7 @@ class SubsamplingBlock(nn.Module):
                 out_channels=out_channels,
                 kernel_size=3,
                 stride=2,
-                padding=1
+                padding=1,
             ),
             nn.ReLU(),
             nn.Conv2d(
@@ -192,12 +212,14 @@ class SubsamplingBlock(nn.Module):
                 out_channels=out_channels,
                 kernel_size=3,
                 stride=2,
-                padding=1
+                padding=1,
             ),
-            nn.ReLU()
+            nn.ReLU(),
         )
-    
-    def forward(self, spectrogram: Tensor, spectrogram_length: Tensor) -> tuple[Tensor, Tensor]:
+
+    def forward(
+        self, spectrogram: Tensor, spectrogram_length: Tensor
+    ) -> tuple[Tensor, Tensor]:
         """
         Args:
             spectrogram: tensor with shape [batch_size, seq_len, n_features]
@@ -211,7 +233,9 @@ class SubsamplingBlock(nn.Module):
         spectrogram = spectrogram.transpose(1, 2)
         batch_size, new_seq_len, out_channels, new_n_features = spectrogram.shape
         # [batch_size, new_seq_len, out_channels * new_n_features ]
-        spectrogram = spectrogram.contiguous().view(batch_size, new_seq_len, out_channels * new_n_features)
+        spectrogram = spectrogram.contiguous().view(
+            batch_size, new_seq_len, out_channels * new_n_features
+        )
         return spectrogram, ((spectrogram_length + 1) // 2 + 1) // 2
 
 
@@ -232,6 +256,7 @@ class Conformer(nn.Module):
         theta: base for rotary embeddings in MultiHeadSelfAttention block
         dropout: dropout probability
     """
+
     def __init__(
         self,
         n_input_features: int,
@@ -243,13 +268,13 @@ class Conformer(nn.Module):
         max_seq_len: int,
         n_tokens: int,
         theta: float = 10000.0,
-        dropout: float = 0.0
+        dropout: float = 0.0,
     ) -> None:
         super().__init__()
         self.subsampling = SubsamplingBlock(n_encoder_features)
         self.projector = nn.Linear(
             in_features=n_encoder_features * n_input_features // 4,
-            out_features=n_encoder_features
+            out_features=n_encoder_features,
         )
         self.layers = nn.ModuleList(
             [
@@ -258,7 +283,7 @@ class Conformer(nn.Module):
                     n_ffn_hidden,
                     n_heads,
                     depthwise_conv_kernel_size,
-                    dropout
+                    dropout,
                 )
                 for _ in range(n_layers)
             ]
@@ -268,16 +293,18 @@ class Conformer(nn.Module):
             in_features=n_encoder_features,
             out_features=n_tokens,
         )
-        freq = precompute_freqs_cis(n_encoder_features // n_heads, max_seq_len * 2, theta=theta)
+        freq = precompute_freqs_cis(
+            n_encoder_features // n_heads, max_seq_len * 2, theta=theta
+        )
         self.freq = nn.Parameter(freq, requires_grad=False)
-    
+
     @staticmethod
     def _lengths_to_padding_mask(lengths: Tensor) -> Tensor:
         batch_size = lengths.shape[0]
         max_length = int(torch.max(lengths).item())
-        padding_mask = torch.arange(max_length, device=lengths.device, dtype=lengths.dtype).expand(
-            batch_size, max_length
-        ) < lengths.unsqueeze(1)
+        padding_mask = torch.arange(
+            max_length, device=lengths.device, dtype=lengths.dtype
+        ).expand(batch_size, max_length) < lengths.unsqueeze(1)
         return padding_mask
 
     def forward(self, spectrogram: Tensor, spectrogram_length: Tensor, **batch) -> dict:
@@ -291,16 +318,20 @@ class Conformer(nn.Module):
         """
         spectrogram = spectrogram.transpose(1, 2)
 
-        spectrogram, spectrogram_length = self.subsampling(spectrogram, spectrogram_length)
+        spectrogram, spectrogram_length = self.subsampling(
+            spectrogram, spectrogram_length
+        )
         spectrogram = self.projector(spectrogram)
 
         seq_len = spectrogram.shape[1]
         freq = self.freq[:seq_len, :]
-        padding_mask = self._lengths_to_padding_mask(spectrogram_length).to(device=spectrogram.device)
+        padding_mask = self._lengths_to_padding_mask(spectrogram_length).to(
+            device=spectrogram.device
+        )
 
         for layer in self.layers:
             spectrogram = layer(spectrogram, freq, padding_mask)
-        
+
         # [batch_size, seq_len, n_tokens]
         logits = self.logits(spectrogram)
         log_probs = nn.functional.log_softmax(logits, dim=-1)

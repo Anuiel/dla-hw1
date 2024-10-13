@@ -9,7 +9,13 @@ from src.text_encoder import CTCBaseDecoder, CTCTextEncoder
 
 
 class WERMetric(BaseMetric):
-    def __init__(self, text_encoder: CTCTextEncoder, token_decoder: CTCBaseDecoder, *args, **kwargs):
+    def __init__(
+        self,
+        text_encoder: CTCTextEncoder,
+        token_decoder: CTCBaseDecoder,
+        *args,
+        **kwargs
+    ):
         super().__init__(*args, **kwargs)
         self.text_encoder = text_encoder
         self.token_decoder = token_decoder
