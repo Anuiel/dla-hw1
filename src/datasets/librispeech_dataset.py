@@ -21,7 +21,7 @@ URL_LINKS = {
     "train-other-500": "https://www.openslr.org/resources/12/train-other-500.tar.gz",
 }
 
-type LibrispeechPart = tp.Literal[
+LibrispeechPart = tp.Literal[
     "dev-clean",
     "dev-other",
     "test-clean",
