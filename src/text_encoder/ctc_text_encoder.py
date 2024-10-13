@@ -1,6 +1,5 @@
 import re
 import typing as tp
-from enum import Enum
 from string import ascii_lowercase
 
 import torch
@@ -55,7 +54,7 @@ class CTCTextEncoder:
         Args:
             inds (list): list of tokens.
         Returns:
-            text (str): raw text with empty tokens and repetitions.
+            text (str): decoded text.
         """
         return "".join(self.ind2char[int(x)] for x in inds if x != self.EMPTY_IND).strip()
 

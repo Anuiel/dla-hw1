@@ -35,30 +35,6 @@ class CTCArgmaxDecoder(CTCBaseDecoder):
         )
 
 
-class CTCBeamSearchDecoderFast(CTCBaseDecoder):
-    def  __init__(self, beam_size: int = 50) -> None:
-        # TODO: tell this thing what is an actual vocab
-        vocab = [""] + list(ascii_lowercase + " ")
-        self.decoder = ctc_decoder(
-            lexicon=None,
-            tokens=vocab,
-            blank_token=vocab[0],
-            sil_token=" ",
-            beam_size=beam_size
-        )
-    
-    def decode(self, logits: torch.Tensor) -> torch.Tensor:
-        logits = logits.detach().cpu()
-        result = self.decoder(logits)
-        return pad_sequence(
-            [
-                res[0].tokens
-                for res in result
-            ],
-            padding_item=0
-        )
-
-
 class CTCBeamSearchDecoder(CTCBaseDecoder):
     def __init__(self, beam_size: int = 100, blank: int = 0) -> None:
         self.beam_size = beam_size

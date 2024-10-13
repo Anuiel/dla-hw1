@@ -1,5 +1,7 @@
-from src.text_encoder.ctc_text_decoder import (CTCArgmaxDecoder,
-                                               CTCBaseDecoder,
-                                               CTCBeamSearchDecoder,
-                                               CTCBeamSearchDecoderFast)
+from src.text_encoder.text_decoder import (
+    CTCArgmaxDecoder,
+    CTCBaseDecoder,
+    CTCBeamSearchDecoder
+)
 from src.text_encoder.ctc_text_encoder import CTCTextEncoder
+from src.text_encoder.bpe import BPETextEncoder

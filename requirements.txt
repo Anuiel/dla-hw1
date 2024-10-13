@@ -19,3 +19,4 @@ pre-commit
 wget
 ipykernel # for jupyter debug
 flashlight-text # for fast beam search
+sentencepiece # bpe tokenizer

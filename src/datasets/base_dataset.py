@@ -83,17 +83,26 @@ class BaseDataset(Dataset):
         audio_path = data_dict["path"]
         audio = self.load_audio(audio_path)
         text = data_dict["text"]
-        text_encoded = self.text_encoder.encode(text)
+        if self.text_encoder is not None:
+            text_encoded = self.text_encoder.encode(text)
+        else:
+            text_encoded = None
 
         spectrogram = self.get_spectrogram(audio)
 
         instance_data = {
             "audio": audio,
-            "spectrogram": spectrogram,
             "text": text,
-            "text_encoded": text_encoded,
             "audio_path": audio_path,
         }
+        if text_encoded is not None:
+            instance_data.update(
+                {"text_encoded": text_encoded}
+            )
+        if spectrogram is not None:
+            instance_data.update(
+                {"spectrogram": spectrogram}
+            )
 
         # TODO think of how to apply wave augs before calculating spectrogram
         # Note: you may want to preserve both audio in time domain and
@@ -126,7 +135,12 @@ class BaseDataset(Dataset):
         Returns:
             spectrogram (Tensor): spectrogram for the audio.
         """
-        return self.instance_transforms["get_spectrogram"](audio)
+        if self.instance_transforms is None:
+            return None
+        spectrogram_transofrm = self.instance_transforms["get_spectrogram"]
+        if spectrogram_transofrm is not None:
+            return self.instance_transforms["get_spectrogram"](audio)
+        return None
 
     def preprocess_data(self, instance_data):
         """
