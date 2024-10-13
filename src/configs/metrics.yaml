@@ -1,0 +1,4 @@
+predictions_dir: data/datasets/custom/predicted
+ground_truth_dir: data/datasets/custom/transcriptions
+text_encoder:
+  _target_: src.text_encoder.CTCTextEncoder

@@ -9,24 +9,13 @@ inference: # metrics that are calculated during inference (eval)
     token_decoder:
       _target_: src.text_encoder.CTCArgmaxDecoder
   # Beam search
-  - _target_: src.metrics.CERMetric
-    name: "CER_(BeamSearch)"
-    token_decoder:
-      _target_: src.text_encoder.CTCBeamSearchDecoder
-      beam_size: 10
-  - _target_: src.metrics.WERMetric
-    name: "WER_(BeamSearch)"
-    token_decoder:
-      _target_: src.text_encoder.CTCBeamSearchDecoder
-      beam_size: 10
-  # Beam search FAST
   # - _target_: src.metrics.CERMetric
   #   name: "CER_(BeamSearch)"
   #   token_decoder:
-  #     _target_: src.text_encoder.CTCBeamSearchDecoderFast
-  #     beam_size: 30
+  #     _target_: src.text_encoder.CTCBeamSearchDecoder
+  #     beam_size: 10
   # - _target_: src.metrics.WERMetric
   #   name: "WER_(BeamSearch)"
   #   token_decoder:
-  #     _target_: src.text_encoder.CTCBeamSearchDecoderFast
-  #     beam_size: 30
+  #     _target_: src.text_encoder.CTCBeamSearchDecoder
+  #     beam_size: 10

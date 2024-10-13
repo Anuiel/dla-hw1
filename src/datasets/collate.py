@@ -49,18 +49,29 @@ def collate_fn(dataset_items: list[dict]):
         padding_item=math.log(1e-6),
     )
 
-    text_encoded_length = torch.tensor(
-        [item["text_encoded"].shape[-1] for item in dataset_items]
-    )
-    # TODO: somehow tell this thing that padding token is EMPTY_IND
-    text_encoded = pad_sequence(
-        [item["text_encoded"].squeeze(0) for item in dataset_items], padding_item=0
-    )
-    return {
+    result = {
         "spectrogram_length": spectrogram_length,
         "spectrogram": spectrogram,
-        "text_encoded": text_encoded,
-        "text_encoded_length": text_encoded_length,
-        "text": [item["text"] for item in dataset_items],
         "audio_path": [item["audio_path"] for item in dataset_items],
     }
+
+    if "text" in dataset_items[0]:
+        text_encoded_length = torch.tensor(
+            [item["text_encoded"].shape[-1] for item in dataset_items]
+        )
+        # TODO: somehow tell this thing that padding token is EMPTY_IND
+        text_encoded = pad_sequence(
+            [item["text_encoded"].squeeze(0) for item in dataset_items], padding_item=0
+        )
+
+        result.update(
+            {
+                "text_encoded_length": text_encoded_length,
+                "text_encoded": text_encoded,
+                "text": [item["text"] for item in dataset_items],
+            }
+        )
+
+    if "save_path" in dataset_items[0]:
+        result.update({"save_path": [item["save_path"] for item in dataset_items]})
+    return result

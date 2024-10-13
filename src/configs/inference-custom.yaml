@@ -1,16 +1,21 @@
 defaults:
-  - model: conformer
+  - model: conformer-best
   - metrics: inference
-  - datasets: librispeech-inference
   - dataloader: inference-small
   - transforms: example_only_instance
   - _self_
-model:
-  n_encoder_features: 256
+# Np metric needed
+datasets:
+  custom:
+    _target_: src.datasets.CustomDirAudioDataset
+    instance_transforms: ${transforms.instance_transforms.inference}
+    audio_dir: "data/datasets/custom/audio"
+    transcription_dir: "data/datasets/custom/transcriptions"
+    save_path: "data/datasets/custom/aboba"
 text_encoder:
   _target_: src.text_encoder.CTCTextEncoder
 inferencer:
-  device_tensors: ["spectrogram", "text_encoded"] # which tensors should be on device (ex. GPU)
+  device_tensors: ["spectrogram"] # which tensors should be on device (ex. GPU)
   device: auto # device name or "auto"
   seed: 1
   from_pretrained: "saved/conformer-big+train-all/model_best.pth" # path to the pretrained model

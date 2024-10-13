@@ -82,8 +82,8 @@ class BaseDataset(Dataset):
         data_dict = self._index[ind]
         audio_path = data_dict["path"]
         audio = self.load_audio(audio_path)
-        text = data_dict["text"]
-        if self.text_encoder is not None:
+        text = data_dict.get("text", None)
+        if self.text_encoder is not None and text is not None:
             text_encoded = self.text_encoder.encode(text)
         else:
             text_encoded = None
@@ -92,9 +92,12 @@ class BaseDataset(Dataset):
 
         instance_data = {
             "audio": audio,
-            "text": text,
             "audio_path": audio_path,
         }
+        if "save_path" in data_dict:
+            instance_data.update({"save_path": data_dict["save_path"]})
+        if text is not None:
+            instance_data.update({"text": text})
         if text_encoded is not None:
             instance_data.update({"text_encoded": text_encoded})
         if spectrogram is not None:
@@ -236,10 +239,6 @@ class BaseDataset(Dataset):
         for entry in index:
             assert "path" in entry, (
                 "Each dataset item should include field 'path'" " - path to audio file."
-            )
-            assert "text" in entry, (
-                "Each dataset item should include field 'text'"
-                " - object ground-truth transcription."
             )
             assert "audio_len" in entry, (
                 "Each dataset item should include field 'audio_len'"

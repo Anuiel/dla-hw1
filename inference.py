@@ -49,13 +49,6 @@ def main(config):
             instantiate(metric_config, text_encoder=text_encoder)
         )
 
-    # save_path for model predictions
-    if config.inferencer.save_path is not None:
-        save_path = ROOT_PATH / "data" / "saved" / config.inferencer.save_path
-        save_path.mkdir(exist_ok=True, parents=True)
-    else:
-        save_path = None
-
     inferencer = Inferencer(
         model=model,
         config=config,
@@ -64,7 +57,6 @@ def main(config):
         text_encoder=text_encoder,
         text_decoder=text_decoder,
         batch_transforms=batch_transforms,
-        save_path=save_path,
         metrics=metrics,
         skip_model_load=False,
     )
@@ -74,7 +66,7 @@ def main(config):
     for part in logs.keys():
         for key, value in logs[part].items():
             full_key = part + "_" + key
-            print(f"    {full_key:15s}: {value}")
+            print(f"    {full_key:15s}: {value}")  # noqa E231
 
 
 if __name__ == "__main__":

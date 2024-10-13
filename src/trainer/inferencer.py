@@ -22,7 +22,6 @@ class Inferencer(BaseTrainer):
         dataloaders,
         text_encoder,
         text_decoder,
-        save_path,
         metrics=None,
         batch_transforms=None,
         skip_model_load=False,
@@ -38,8 +37,6 @@ class Inferencer(BaseTrainer):
                 sets of data.
             text_encoder (CTCTextEncoder): text encoder.
             text_decoder (CTCBaseDecoder): text decoder.
-            save_path (str): path to save model predictions and other
-                information.
             metrics (dict): dict with the definition of metrics for
                 inference (metrics[inference]). Each metric is an instance
                 of src.metrics.BaseMetric.
@@ -68,10 +65,6 @@ class Inferencer(BaseTrainer):
 
         # define dataloaders
         self.evaluation_dataloaders = {k: v for k, v in dataloaders.items()}
-
-        # path definition
-
-        self.save_path = save_path
 
         # define metrics
         self.metrics = metrics
@@ -106,9 +99,6 @@ class Inferencer(BaseTrainer):
         Run batch through the model, compute metrics, and
         save predictions to disk.
 
-        Save directory is defined by save_path in the inference
-        config and current partition.
-
         Args:
             batch_idx (int): the index of the current batch.
             batch (dict): dict-based batch containing the data from
@@ -140,16 +130,16 @@ class Inferencer(BaseTrainer):
         # Use if you need to save predictions on disk
 
         batch_size = batch["spectrogram_length"].shape[0]
-        current_id = batch_idx * batch_size
 
         predictions_ids = self.decode_batch(batch)
         for i in range(batch_size):
             predictions_text = self.text_encoder.decode(predictions_ids[i])
-            output_id = current_id + i
 
-            if self.save_path is not None:
-                output_path = str(self.save_path / part / f"output_{output_id}.txt")
-                with open(output_path, "w") as output_file:
+            if (
+                "save_path" in batch
+                and (save_path := batch["save_path"][i]) is not None
+            ):
+                with open(save_path, "w") as output_file:
                     output_file.write(predictions_text)
                 # you can use safetensors or other lib here
                 # torch.save(output, self.save_path / part / f"output_{output_id}.txt")
@@ -175,10 +165,6 @@ class Inferencer(BaseTrainer):
         self.model.eval()
 
         self.evaluation_metrics.reset()
-
-        # create Save dir
-        if self.save_path is not None:
-            (self.save_path / part).mkdir(exist_ok=True, parents=True)
 
         with torch.no_grad():
             for batch_idx, batch in tqdm(
