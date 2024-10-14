@@ -11,7 +11,7 @@ datasets:
     instance_transforms: ${transforms.instance_transforms.inference}
     audio_dir: "data/datasets/custom/audio"
     transcription_dir: "data/datasets/custom/transcriptions"
-    save_path: "data/datasets/custom/aboba"
+    save_path: "data/datasets/custom/lm"
 text_encoder:
   _target_: src.text_encoder.CTCTextEncoder
 inferencer:
@@ -20,4 +20,5 @@ inferencer:
   seed: 1
   from_pretrained: "saved/conformer-big+train-all/model_best.pth" # path to the pretrained model
   text_decoder: # for final decoding algorithm
-    _target_: src.text_encoder.CTCArgmaxDecoder
+    _target_: src.text_encoder.CTCBeamSearchLMDecoder
+    beam_size: 10

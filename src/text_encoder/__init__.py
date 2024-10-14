@@ -4,4 +4,5 @@ from src.text_encoder.text_decoder import (
     CTCArgmaxDecoder,
     CTCBaseDecoder,
     CTCBeamSearchDecoder,
+    CTCBeamSearchLMDecoder,
 )

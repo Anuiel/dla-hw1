@@ -5,7 +5,7 @@ from collections import defaultdict
 from string import ascii_lowercase
 
 import torch
-from torchaudio.models.decoder import ctc_decoder
+from torchaudio.models.decoder import ctc_decoder, download_pretrained_files
 
 from src.datasets.collate import pad_sequence
 
@@ -103,3 +103,23 @@ class CTCBeamSearchDecoder(CTCBaseDecoder):
 
         best, (p_bl, p_n_bl) = current_beams[0]
         return torch.tensor(best)
+
+
+class CTCBeamSearchLMDecoder(CTCBaseDecoder):
+    def __init__(self, beam_size: int = 50) -> None:
+        files = download_pretrained_files("librispeech-4-gram")
+        self.decoder = ctc_decoder(
+            lexicon=files.lexicon,
+            tokens=[""] + list(ascii_lowercase + "|" + "'"),
+            lm=files.lm,
+            nbest=1,
+            beam_size=beam_size,
+            blank_token="",
+        )
+
+    def decode(self, logits: torch.Tensor):
+        batch_hypotheses = self.decoder(logits.detach().cpu())
+        return pad_sequence(
+            [samples[0].tokens for samples in batch_hypotheses],
+            padding_item=0,
+        )

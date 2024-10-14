@@ -8,14 +8,14 @@ inference: # metrics that are calculated during inference (eval)
     name: "WER_(Argmax)"
     token_decoder:
       _target_: src.text_encoder.CTCArgmaxDecoder
-  # Beam search + LM
+  # Beam search
   - _target_: src.metrics.CERMetric
-    name: "CER_(BeamSearch+LM)"
+    name: "CER_(BeamSearch)"
     token_decoder:
-      _target_: src.text_encoder.CTCBeamSearchLMDecoder
+      _target_: src.text_encoder.CTCBeamSearchDecoder
       beam_size: 100
   - _target_: src.metrics.WERMetric
-    name: "WER_(BeamSearch+LM)"
+    name: "WER_(BeamSearch)"
     token_decoder:
-      _target_: src.text_encoder.CTCBeamSearchLMDecoder
+      _target_: src.text_encoder.CTCBeamSearchDecoder
       beam_size: 100

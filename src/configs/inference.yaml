@@ -1,12 +1,10 @@
 defaults:
-  - model: conformer
+  - model: conformer-best
   - metrics: inference
   - datasets: librispeech-inference
   - dataloader: inference-small
   - transforms: example_only_instance
   - _self_
-model:
-  n_encoder_features: 256
 text_encoder:
   _target_: src.text_encoder.CTCTextEncoder
 inferencer:
