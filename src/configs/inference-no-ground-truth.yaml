@@ -3,7 +3,6 @@ defaults:
   - dataloader: inference-small
   - transforms: example_only_instance
   - _self_
-# Np metric needed
 datasets:
   predicted:
     _target_: src.datasets.CustomDirAudioDataset
@@ -11,6 +10,7 @@ datasets:
     audio_dir: "data/datasets/custom/audio"
     transcription_dir: null
     save_path: "data/datasets/custom/aboba228"
+# No metric needed
 metrics:
   _target_: dict
 text_encoder:
@@ -21,4 +21,5 @@ inferencer:
   seed: 1
   from_pretrained: "saved/conformer-big+train-all/model_best.pth" # path to the pretrained model
   text_decoder: # for final decoding algorithm
-    _target_: src.text_encoder.CTCArgmaxDecoder
+    _target_: src.text_encoder.CTCBeamSearchLMDecoder
+    beam_size: 100

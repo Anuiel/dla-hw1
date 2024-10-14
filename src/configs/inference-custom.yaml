@@ -21,4 +21,4 @@ inferencer:
   from_pretrained: "saved/conformer-big+train-all/model_best.pth" # path to the pretrained model
   text_decoder: # for final decoding algorithm
     _target_: src.text_encoder.CTCBeamSearchLMDecoder
-    beam_size: 10
+    beam_size: 100
